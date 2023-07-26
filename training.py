@@ -3,7 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 
 
-def evaluation(test_loader, name=None, model_best=None, epoch=None):
+def evaluation(device, test_loader, name=None, model_best=None, epoch=None):
     if model_best is None:
         model_best = torch.load(name + '.model')
 
@@ -12,6 +12,7 @@ def evaluation(test_loader, name=None, model_best=None, epoch=None):
     N = 0
     with torch.no_grad():
         for batch_idx, test_batch in enumerate(test_loader):
+            test_batch = test_batch.to(device)
             loss_t = model_best.forward(test_batch, reduction='sum')
             loss = loss + loss_t.item()
             N = N + test_batch.shape[0]
@@ -25,7 +26,7 @@ def evaluation(test_loader, name=None, model_best=None, epoch=None):
     return loss
 
 
-def training(name, max_patience, num_epochs, model, optimizer, training_loader, val_loader):
+def training(device, name, max_patience, num_epochs, model, optimizer, training_loader, val_loader):
     nll_val = []
     best_nll = 1000.
     patience = 0
@@ -34,8 +35,7 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
         # TRAINING
         model.train()
         for batch_idx, batch in enumerate(training_loader):
-            if batch_idx % 10 == 0:
-                print('10 batchy')
+            batch = batch.to(device)
             if hasattr(model, 'dequantization'):
                 if model.dequantization:
                     batch = batch + torch.rand(batch.shape)
@@ -46,7 +46,7 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
             optimizer.step()
 
         # VALIDATION
-        loss_val = evaluation(val_loader, model_best=model, epoch=e)
+        loss_val = evaluation(device, val_loader, model_best=model, epoch=e)
         nll_val.append(loss_val)  # save for plotting
 
         if e == 0:
@@ -58,7 +58,7 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
                 best_nll = loss_val
                 patience = 0
 
-                samples_generated(name, val_loader, extra_name="_epoch_" + str(e))
+                # samples_generated(name, extra_name=f"_epoch_{e}")
             else:
                 patience = patience + 1
 
@@ -66,6 +66,7 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
             break
 
     nll_val = np.asarray(nll_val)
+    return nll_val
 
 
 def samples_real(name, test_loader):
@@ -85,7 +86,7 @@ def samples_real(name, test_loader):
 
 
 def samples_generated(name, extra_name=''):
-    model_best = torch.load(name + '.model')
+    model_best = torch.load(name + '.model').to("cpu")
     model_best.eval()
 
     num_x = 4
@@ -108,5 +109,6 @@ def plot_curve(name, nll_val):
     plt.plot(np.arange(len(nll_val)), nll_val, linewidth='3')
     plt.xlabel('epochs')
     plt.ylabel('nll')
+    plt.show()
     plt.savefig(name + '_nll_val_curve.pdf', bbox_inches='tight')
     plt.close()
