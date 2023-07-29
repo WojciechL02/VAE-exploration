@@ -13,7 +13,7 @@ def evaluation(device, test_loader, name=None, model_best=None, epoch=None):
     with torch.no_grad():
         for batch_idx, test_batch in enumerate(test_loader):
             test_batch = test_batch.to(device)
-            loss_t = model_best.forward(test_batch, reduction='sum')
+            loss_t = model_best.forward(test_batch)
             loss = loss + loss_t.item()
             N = N + test_batch.shape[0]
         loss = loss / N
@@ -21,7 +21,7 @@ def evaluation(device, test_loader, name=None, model_best=None, epoch=None):
     if epoch is None:
         print(f'FINAL LOSS: nll={loss}')
     else:
-        print(f'Epoch: {epoch}, val nll={loss}')
+        print(f'Epoch: {epoch}, val_loss={loss}')
 
     return loss
 
@@ -108,7 +108,7 @@ def samples_generated(name, extra_name=''):
 def plot_curve(name, nll_val):
     plt.plot(np.arange(len(nll_val)), nll_val, linewidth='3')
     plt.xlabel('epochs')
-    plt.ylabel('nll')
+    plt.ylabel('loss')
     plt.show()
     plt.savefig(name + '_nll_val_curve.pdf', bbox_inches='tight')
     plt.close()
