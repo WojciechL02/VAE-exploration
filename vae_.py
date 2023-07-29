@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from distributions import log_normal_diag, log_categorical, log_standard_normal
+from vae.distributions import log_normal_diag, log_categorical, log_standard_normal
 
 
 class Encoder(nn.Module):
