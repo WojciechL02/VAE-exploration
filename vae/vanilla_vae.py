@@ -109,7 +109,7 @@ class VAE(BaseVAE):
             # KL = torch.mean(-0.5 * torch.sum(1 + log_var_e - mu_e ** 2 - log_var_e.exp(), dim=1), dim=0)
             KL = (self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z) - self.prior.log_prob(z)).sum(-1).mean()
 
-        return (RE + 0.002 * KL)
+        return (RE + 0.0005 * KL)
 
     def sample(self, num_samples: int):
         """
