@@ -12,7 +12,7 @@ def evaluation(device, test_loader, name=None, model_best=None, epoch=None):
     N = 0
     with torch.no_grad():
         for batch_idx, test_batch in enumerate(test_loader):
-            test_batch = test_batch.to(device)
+            test_batch = test_batch.to(device, non_blocking=True)
             loss_t = model_best.forward(test_batch)
             loss = loss + loss_t.item()
             N = N + test_batch.shape[0]
@@ -35,7 +35,7 @@ def training(device, name, max_patience, num_epochs, model, optimizer, training_
         # TRAINING
         model.train()
         for batch_idx, batch in enumerate(training_loader):
-            batch = batch.to(device)
+            batch = batch.to(device, non_blocking=True)
             if hasattr(model, 'dequantization'):
                 if model.dequantization:
                     batch = batch + torch.rand(batch.shape)
